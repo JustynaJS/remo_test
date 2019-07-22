@@ -1,0 +1,2 @@
+3 times blur,
+threshold 0.68

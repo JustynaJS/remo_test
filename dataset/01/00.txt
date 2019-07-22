@@ -1,0 +1,6 @@
+reduce noise:
+1. cells with one neighbour
+2. cells with zero neighbours
+repeat
+3 times blurr,
+mask with 0.7 threshold
