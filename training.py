@@ -1,7 +1,8 @@
 import time
 
 import tensorflow as tf
-from IPython.core.display import clear_output
+# from IPython.core.display import clear_output
+from utils import generate_images
 
 
 # @tf.function()
@@ -32,19 +33,19 @@ def train(dataset, epochs, generator, discriminator,
           generator_loss, discriminator_loss,
           generator_optimizer, discriminator_optimizer,
           loss_object,
-          test_dataset, generate_images,
-          checkpoint, checkpoint_prefix):
+          test_dataset, checkpoint, checkpoint_prefix):
     for epoch in range(epochs):
-        print('epoch #{}/{}'.format(epoch, epochs))
+        print('epoch #{}/{}'.format(epoch + 1, epochs))
         start = time.time()
 
-        for input_image, target in dataset:
+        for idx, (input_image, target) in enumerate(dataset):
+            # print('processing batch {}'.format(idx))
             train_step(input_image, target, generator, discriminator, generator_loss, discriminator_loss,
                        generator_optimizer, discriminator_optimizer, loss_object)
 
-        clear_output(wait=True)
+        # clear_output(wait=True)
         for inp, tar in test_dataset.take(1):
-            generate_images(generator, inp, tar)
+            generate_images(generator, inp, tar, epoch + 1)
 
         # saving (checkpoint) the model every 20 epochs
         if (epoch + 1) % 20 == 0:

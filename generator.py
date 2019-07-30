@@ -14,33 +14,30 @@ LAMBDA = 100
 
 
 def Generator():
+    # For convolutions arithmetics see: https://arxiv.org/abs/1603.07285
+
     down_stack = [
-        downsample(64, 4, apply_batch_norm=False),  # (bs, 128, 128, 64)
-        downsample(128, 4),  # (bs, 64, 64, 128)
-        downsample(256, 4),  # (bs, 32, 32, 256)
-        downsample(512, 4),  # (bs, 16, 16, 512)
-        downsample(512, 4),  # (bs, 8, 8, 512)
-        downsample(512, 4),  # (bs, 4, 4, 512)
-        downsample(512, 4),  # (bs, 2, 2, 512)
-        downsample(512, 4),  # (bs, 1, 1, 512)
+        downsample(64, 4, apply_batch_norm=False, strides=3, name='down_0'),  # (bs, 8, 8, 64)
+        downsample(128, 4, name='down_1'),  # (bs, 4, 4, 128)
+        downsample(256, 3, strides=1, name='down_2'),  # (bs, 4, 4, 256)
+        downsample(512, 3, name='down_3'),  # (bs, 2, 2, 512)
+        downsample(512, 4, name='down_4'),  # (bs, 1, 1, 512)
     ]
 
+
     up_stack = [
-        upsample(512, 4, apply_dropout=True),  # (bs, 2, 2, 1024)
-        upsample(512, 4, apply_dropout=True),  # (bs, 4, 4, 1024)
-        upsample(512, 4, apply_dropout=True),  # (bs, 8, 8, 1024)
-        upsample(512, 4),  # (bs, 16, 16, 1024)
-        upsample(256, 4),  # (bs, 32, 32, 512)
-        upsample(128, 4),  # (bs, 64, 64, 256)
-        upsample(64, 4),  # (bs, 128, 128, 128)
+        upsample(512, 4, apply_dropout=True, name='up_0'),  # (bs, 2, 2, 512) - after concatenation (bs, 2, 2, 1024)
+        upsample(256, 4, apply_dropout=True, name='up_1'),  # (bs, 4, 4, 256) - after concatenation (bs, 4, 4, 512)
+        upsample(128, 4, apply_dropout=True, strides=1, name='up_2'),  # (bs, 4, 4, 128) - after concatenation (bs, 4, 4, 256)
+        upsample(64, 2, apply_dropout=True, strides=2, name='up_3', padding='valid'),  # (bs, 8, 8, 64) - after concatenation (bs, 8, 8, 128)
     ]
 
     initializer = tf.random_normal_initializer(0., 0.02)
-    last = tf.keras.layers.Conv2DTranspose(OUTPUT_CHANNELS, 4,
+    last = tf.keras.layers.Conv2DTranspose(OUTPUT_CHANNELS, 8,
                                            strides=2,
-                                           padding='same',
+                                           padding='valid',
                                            kernel_initializer=initializer,
-                                           activation='tanh')  # (bs, 256, 256, 3)
+                                           activation='tanh')  # (bs, 22, 22, 3)
 
     concat = tf.keras.layers.Concatenate()
 
